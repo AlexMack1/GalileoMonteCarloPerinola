@@ -44,33 +44,36 @@ def jugar_perinola(jugadores, pozo):
 
     return jugadores, pozo
 
+
+
+
 def simulacion(n_jugadores, m_juegos, dinero_inicial):
     jugadores = [Jugador(dinero_inicial) for _ in range(n_jugadores)]
     pozo = 0
-    juegos_para_ganador = 0
-    juegos_para_bancarrota = 0
+    juegos_para_ganador = -1
+    juegos_para_bancarrota = -1
 
     for i in range(m_juegos):
         jugadores, pozo = jugar_perinola(jugadores, pozo)
 
-        if any(j.billetera == dinero_inicial * n_jugadores for j in jugadores):
-            juegos_para_ganador = i
-            break
+        if any(j.billetera == dinero_inicial * n_jugadores for j in jugadores) and juegos_para_ganador == -1:
+            juegos_para_ganador = i + 1
 
-        if any(j.billetera == 0 for j in jugadores):
-            juegos_para_bancarrota = i
-            break
+        if any(j.billetera == 0 for j in jugadores) and juegos_para_bancarrota == -1:
+            juegos_para_bancarrota = i + 1
 
     return jugadores, juegos_para_ganador, juegos_para_bancarrota
 
-n_jugadores = 5
-m_juegos = 10000
-dinero_inicial = 100
+# ... (resto del código anterior)
 
-jugadores, juegos_ganador, juegos_bancarrota = simulacion(n_jugadores, m_juegos, dinero_inicial)
+print(f"Juegos para que haya un ganador: {juegos_ganador if juegos_ganador != -1 else 'No hubo ganador en ' + str(m_juegos) + ' juegos'}")
+print(f"Juegos para que un jugador se quede sin dinero: {juegos_bancarrota if juegos_bancarrota != -1 else 'Ningún jugador se quedó sin dinero en ' + str(m_juegos) + ' juegos'}")
 
-print(f"Juegos para que haya un ganador: {juegos_ganador}")
-print(f"Juegos para que un jugador se quede sin dinero: {juegos_bancarrota}")
+
+
+
+
+
 
 # Gráfica de ganancias/pérdidas al final de la simulación
 fig, ax = plt.subplots()
