@@ -1,53 +1,82 @@
-import pygame
 import numpy as np
-import time
+import matplotlib.pyplot as plt
 
-# Inicializar pygame
-pygame.init()
+class Jugador:
+    def __init__(self, dinero_inicial):
+        self.billetera = dinero_inicial
+        self.ganado = 0
+        self.perdido = 0
 
-# Definir colores
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-GREEN = (0, 255, 0)
+    def pon(self, cantidad):
+        monto = min(cantidad, self.billetera)
+        self.billetera -= monto
+        self.perdido += monto
+        return monto
 
-# Establecer dimensiones de la ventana
-WIDTH, HEIGHT = 500, 500
+    def toma(self, cantidad):
+        self.billetera += cantidad
+        self.ganado += cantidad
 
-# Crear ventana y reloj
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Simulación de Perinola")
-clock = pygame.time.Clock()
+def jugar_perinola(jugadores, pozo):
+    acciones = ["Pon 1", "Pon 2", "Toma 1", "Toma 2", "Toma todo", "Todos ponen"]
+    resultado = np.random.choice(acciones)
 
-font = pygame.font.Font(None, 74)
+    if resultado == "Pon 1":
+        pozo += jugadores[0].pon(1)
+    elif resultado == "Pon 2":
+        pozo += jugadores[0].pon(2)
+    elif resultado == "Toma 1":
+        if pozo > 0:
+            pozo -= 1
+            jugadores[0].toma(1)
+    elif resultado == "Toma 2":
+        monto = min(2, pozo)
+        pozo -= monto
+        jugadores[0].toma(monto)
+    elif resultado == "Toma todo":
+        jugadores[0].toma(pozo)
+        pozo = 0
+    elif resultado == "Todos ponen":
+        for jugador in jugadores:
+            pozo += jugador.pon(1)
 
-acciones = ["Pon 1", "Pon 2", "Toma 1", "Toma 2", "Toma todo", "Todos ponen"]
+    jugadores = jugadores[1:] + [jugadores[0]]
 
-def mostrar_resultado(resultado):
-    text = font.render(resultado, True, BLACK)
-    text_rect = text.get_rect(center=(WIDTH/2, HEIGHT/2))
-    screen.fill(WHITE)
-    screen.blit(text, text_rect)
-    pygame.display.flip()
-    time.sleep(2)
+    return jugadores, pozo
 
-def main():
-    run = True
-    while run:
-        screen.fill(WHITE)
+def simulacion(n_jugadores, m_juegos, dinero_inicial):
+    jugadores = [Jugador(dinero_inicial) for _ in range(n_jugadores)]
+    pozo = 0
+    juegos_para_ganador = 0
+    juegos_para_bancarrota = 0
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                run = False
+    for i in range(m_juegos):
+        jugadores, pozo = jugar_perinola(jugadores, pozo)
 
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                resultado = np.random.choice(acciones)
-                mostrar_resultado(resultado)
+        if any(j.billetera == dinero_inicial * n_jugadores for j in jugadores):
+            juegos_para_ganador = i
+            break
 
-        pygame.display.flip()
-        clock.tick(60)
+        if any(j.billetera == 0 for j in jugadores):
+            juegos_para_bancarrota = i
+            break
 
-    pygame.quit()
+    return jugadores, juegos_para_ganador, juegos_para_bancarrota
 
-if __name__ == "__main__":
-    main()
+n_jugadores = 5
+m_juegos = 10000
+dinero_inicial = 100
 
+jugadores, juegos_ganador, juegos_bancarrota = simulacion(n_jugadores, m_juegos, dinero_inicial)
+
+print(f"Juegos para que haya un ganador: {juegos_ganador}")
+print(f"Juegos para que un jugador se quede sin dinero: {juegos_bancarrota}")
+
+# Gráfica de ganancias/pérdidas al final de la simulación
+fig, ax = plt.subplots()
+nombres = [f"Jugador {i+1}" for i in range(n_jugadores)]
+ganancias = [j.ganado - j.perdido for j in jugadores]
+ax.bar(nombres, ganancias)
+ax.set_title("Ganancia/Pérdida por jugador al término de la simulación")
+plt.xticks(rotation=45)
+plt.show()
