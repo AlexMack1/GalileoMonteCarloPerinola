@@ -1,3 +1,4 @@
+import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -61,22 +62,25 @@ def simulacion(n_jugadores, m_juegos, dinero_inicial):
 
     return jugadores, juegos_para_ganador, juegos_para_bancarrota
 
+st.title('Simulación de Perinola')
 
-n_jugadores = 5
-m_juegos = 10000
-dinero_inicial = 100
+# Interfaz de Usuario
+n_jugadores = st.slider('Número de jugadores', min_value=1, max_value=10, value=5)
+m_juegos = st.slider('Número de juegos', min_value=1000, max_value=20000, value=10000)
+dinero_inicial = st.slider('Dinero inicial por jugador', min_value=10, max_value=200, value=100)
 
-jugadores, juegos_ganador, juegos_bancarrota = simulacion(n_jugadores, m_juegos, dinero_inicial)
+if st.button('Iniciar Simulación'):
+    jugadores, juegos_ganador, juegos_bancarrota = simulacion(n_jugadores, m_juegos, dinero_inicial)
 
-print(f"Juegos para que haya un ganador: {juegos_ganador if juegos_ganador != -1 else 'No hubo ganador en ' + str(m_juegos) + ' juegos'}")
-print(f"Juegos para que un jugador se quede sin dinero: {juegos_bancarrota if juegos_bancarrota != -1 else 'Ningún jugador se quedó sin dinero en ' + str(m_juegos) + ' juegos'}")
+    # Resultados
+    st.write(f"Juegos para que haya un ganador: {juegos_ganador if juegos_ganador != -1 else 'No hubo ganador en ' + str(m_juegos) + ' juegos'}")
+    st.write(f"Juegos para que un jugador se quede sin dinero: {juegos_bancarrota if juegos_bancarrota != -1 else 'Ningún jugador se quedó sin dinero en ' + str(m_juegos) + ' juegos'}")
 
-
-# Gráfica de ganancias/pérdidas al final de la simulación
-fig, ax = plt.subplots()
-nombres = [f"Jugador {i+1}" for i in range(n_jugadores)]
-ganancias = [j.ganado - j.perdido for j in jugadores]
-ax.bar(nombres, ganancias)
-ax.set_title("Ganancia/Pérdida por jugador al término de la simulación")
-plt.xticks(rotation=45)
-plt.show()
+    # Gráfica de ganancias/pérdidas
+    fig, ax = plt.subplots()
+    nombres = [f"Jugador {i+1}" for i in range(n_jugadores)]
+    ganancias = [j.ganado - j.perdido for j in jugadores]
+    ax.bar(nombres, ganancias)
+    ax.set_title("Ganancia/Pérdida por jugador al término de la simulación")
+    plt.xticks(rotation=45)
+    st.pyplot(fig)
